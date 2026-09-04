@@ -91,7 +91,11 @@ func TestRunEncerraGraciosamenteComSIGTERM(t *testing.T) {
 func TestRunDevolveErroQuandoPortaEstaOcupada(t *testing.T) {
 	// Curinga, igual ao que run() usa: em BSD/macOS o SO_REUSEADDR deixaria
 	// 0.0.0.0:P conviver com 127.0.0.1:P, e o bind não falharia.
-	l, err := net.Listen("tcp", ":0")
+	//
+	// O G102 do gosec ("binds to all network interfaces") é justamente o ponto do
+	// teste: ele precisa ocupar a mesma faixa que o servidor ocupa para o conflito
+	// existir. Listener de teste, fechado no Cleanup, nunca em código de produção.
+	l, err := net.Listen("tcp", ":0") //nolint:gosec // G102 é o comportamento sob teste
 	if err != nil {
 		t.Fatalf("não consegui ocupar porta: %v", err)
 	}

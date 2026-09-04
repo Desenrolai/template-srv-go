@@ -7,6 +7,9 @@ linters:
     - errorlint
     # Corpo de resposta HTTP não fechado vaza conexão.
     - bodyclose
+    # Este template é a base de todo serviço Go da casa: a régua de segurança
+    # daqui se replica em cada repo gerado pelo Forge.
+    - gosec
     - misspell
   exclusions:
     generated: lax

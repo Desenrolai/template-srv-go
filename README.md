@@ -9,6 +9,7 @@ GitHub Template — backend Go (`net/http`, stdlib apenas).
 - Log estruturado com `log/slog`
 - Encerramento gracioso em `SIGTERM` (o rollout do K8s drena as conexões)
 - Imagem final `distroless/static:nonroot`, binário estático
+- Lint com `gosec` — a régua de segurança daqui se replica em todo serviço gerado
 
 ## Ao gerar um projeto a partir deste template
 
@@ -66,7 +67,7 @@ A porta vem de `PORT` (padrão `8080`, o mesmo `deploy.port` do `forge.yaml`).
 go build ./...
 go vet ./...
 go test ./... -race -cover
-golangci-lint run ./...      # v2.13.2, config em .golangci.yml
+golangci-lint run ./...      # v2.13.2, config em .golangci.yml (inclui gosec)
 ```
 
 ## Docker
