@@ -10,6 +10,42 @@ GitHub Template — backend Go (`net/http`, stdlib apenas).
 - Encerramento gracioso em `SIGTERM` (o rollout do K8s drena as conexões)
 - Imagem final `distroless/static:nonroot`, binário estático
 
+## Ao gerar um projeto a partir deste template
+
+O Forge scaffolda com `repos.createUsingTemplate` do GitHub — **cópia literal dos
+arquivos**, sem substituição de placeholder. Tudo que carrega o nome do template chega
+no repo novo com o nome do template.
+
+Em Go isso não é cosmético: o `module` é o prefixo de **todos os imports internos**.
+Troque o module path antes do primeiro commit:
+
+```bash
+NOVO=github.com/desenrolai/<seu-repo>
+ANTIGO=$(go list -m)
+
+go mod edit -module "$NOVO"
+grep -rl "$ANTIGO" --include='*.go' . | xargs perl -pi -e "s{\Q$ANTIGO\E}{$NOVO}g"
+
+go build ./... && go vet ./... && go test ./... -race
+```
+
+São **4** pontos. Se for fazer à mão, são todos estes — nenhum a menos:
+
+| # | Arquivo | O que é |
+|---|---|---|
+| 1 | `go.mod` | diretiva `module` |
+| 2 | `cmd/server/main.go` | import de `internal/server` |
+| 3 | `cmd/healthcheck/main.go` | import de `internal/server` |
+| 4 | `internal/server/server_test.go` | import de `internal/server` **no teste** |
+
+> ⚠️ **`go build ./...` não valida este rename.** Medido: trocando o `go.mod` e os dois
+> `cmd/`, mas esquecendo o import do teste, `go build ./...` sai **0** — e só `go vet`
+> (exit 1) e `go test` (`[setup failed]`) acusam. Valide com `go test ./...`, não com o
+> build.
+
+Também carregam o nome do template, sem quebrar nada: o título deste README e as tags
+`docker build -t` dos exemplos abaixo.
+
 ## Requisitos
 
 - Go 1.27.1+
