@@ -1,10 +1,56 @@
-# srv-go-template
+# template-srv-go
 
-GitHub Template — backend Go (net/http).
+GitHub Template — backend Go (`net/http`, stdlib apenas).
+
+## Stack
+
+- **Go 1.27.1** — biblioteca padrão, sem dependências externas
+- Roteamento com padrões de método do `net/http` (`GET /health`)
+- Log estruturado com `log/slog`
+- Encerramento gracioso em `SIGTERM` (o rollout do K8s drena as conexões)
+- Imagem final `distroless/static:nonroot`, binário estático
+- Lint com `gosec` — a régua de segurança daqui se replica em todo serviço gerado
+
+## Ao gerar um projeto a partir deste template
+
+O Forge scaffolda com `repos.createUsingTemplate` do GitHub — **cópia literal dos
+arquivos**, sem substituição de placeholder. Tudo que carrega o nome do template chega
+no repo novo com o nome do template.
+
+Em Go isso não é cosmético: o `module` é o prefixo de **todos os imports internos**.
+Troque o module path antes do primeiro commit:
+
+```bash
+NOVO=github.com/desenrolai/<seu-repo>
+ANTIGO=$(go list -m)
+
+go mod edit -module "$NOVO"
+grep -rl "$ANTIGO" --include='*.go' . | xargs perl -pi -e "s{\Q$ANTIGO\E}{$NOVO}g"
+
+go build ./... && go vet ./... && go test ./... -race
+```
+
+São **4** pontos. Se for fazer à mão, são todos estes — nenhum a menos:
+
+| # | Arquivo | O que é |
+|---|---|---|
+| 1 | `go.mod` | diretiva `module` |
+| 2 | `cmd/server/main.go` | import de `internal/server` |
+| 3 | `cmd/healthcheck/main.go` | import de `internal/server` |
+| 4 | `internal/server/server_test.go` | import de `internal/server` **no teste** |
+
+> ⚠️ **`go build ./...` não valida este rename.** Medido: trocando o `go.mod` e os dois
+> `cmd/`, mas esquecendo o import do teste, `go build ./...` sai **0** — e só `go vet`
+> (exit 1) e `go test` (`[setup failed]`) acusam. Valide com `go test ./...`, não com o
+> build.
+
+Também carregam o nome do template, sem quebrar nada: o título deste README e as tags
+`docker build -t` dos exemplos abaixo.
 
 ## Requisitos
 
-- Go 1.22+
+- Go 1.27.1+
+- Docker (opcional, para a imagem)
 
 ## Rodar localmente
 
@@ -13,20 +59,40 @@ go run ./cmd/server
 # GET http://localhost:8080/health → {"status":"ok"}
 ```
 
-## Build
+A porta vem de `PORT` (padrão `8080`, o mesmo `deploy.port` do `forge.yaml`).
+
+## Testes e qualidade
 
 ```bash
-go build -o server ./cmd/server
-./server
+go build ./...
+go vet ./...
+go test ./... -race -cover
+golangci-lint run ./...      # v2.13.2, config em .golangci.yml (inclui gosec)
 ```
 
 ## Docker
 
 ```bash
-docker build -t srv-go-template .
-docker run -p 8080:8080 srv-go-template
+docker build -t template-srv-go .
+docker run --rm -p 8080:8080 template-srv-go
+docker inspect --format '{{.State.Health.Status}}' <container>   # HEALTHCHECK
+```
+
+O `HEALTHCHECK` usa o binário `cmd/healthcheck`, que consulta `/health` no próprio
+container — a imagem distroless não tem shell nem `curl`.
+
+## Estrutura
+
+```
+cmd/server/            # entrypoint HTTP
+cmd/healthcheck/       # probe do HEALTHCHECK (imagem sem shell)
+internal/server/       # mux, handlers e configuração de porta
+forge.yaml             # metadados do Forge (kind: srv, port 8080, healthPath /health)
+.golangci.yml          # configuração do lint
 ```
 
 ## CI
 
-Push para `main` → build + vet + test + push GHCR.
+- **lint** — `golangci-lint`
+- **test** — `go build`, `go vet`, `go test ./... -race -cover`
+- **docker** — constrói a imagem em todo PR; publica no GHCR só na branch default

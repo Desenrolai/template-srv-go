@@ -1,0 +1,20 @@
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    # Erro embrulhado sem %w quebra errors.Is/As silenciosamente.
+    - errorlint
+    # Corpo de resposta HTTP não fechado vaza conexão.
+    - bodyclose
+    # Este template é a base de todo serviço Go da casa: a régua de segurança
+    # daqui se replica em cada repo gerado pelo Forge.
+    - gosec
+    - misspell
+  exclusions:
+    generated: lax
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
