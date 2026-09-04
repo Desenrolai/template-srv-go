@@ -1,5 +1,20 @@
+# binários compilados
 /server
+/healthcheck
+/out/
 *.exe
 *.test
+
+# cobertura
+*.out
+coverage.*
+
+# ambiente
 .env
 .env.local
+.env.*.local
+
+# editores / SO
+.DS_Store
+.idea/
+.vscode/
