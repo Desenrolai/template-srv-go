@@ -1,3 +1,3 @@
-module github.com/desenrolai/srv-go-template
+module github.com/desenrolai/template-srv-go
 
-go 1.26
+go 1.27.1
