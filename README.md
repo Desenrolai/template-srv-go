@@ -113,6 +113,9 @@ string simples viraria um único label com vírgula no nome, que não casa com r
 > segundos com **`steps: 0`** — nenhum step aparece, nenhum log de erro, nada que aponte
 > para billing. Parece YAML quebrado, e a pessoa perde meia hora procurando erro de
 > sintaxe. É cota.
+>
+> O que separa esse caso de um job legitimamente `skipped` — que **também** reporta zero
+> steps — é a conclusão: aqui ela é `failure`, não `skipped`.
 
 ## CI
 
