@@ -1,9 +1,10 @@
 name: CI
 
+# Só `push`: com `pull_request` junto, cada commit de uma branch com PR aberto
+# dispararia dois runs completos (o `concurrency` não deduplica entre eventos,
+# porque a chave `github.ref` difere). Os checks aparecem no PR do mesmo jeito.
 on:
   push:
-    branches: ["**"]
-  pull_request:
     branches: ["**"]
 
 concurrency:
